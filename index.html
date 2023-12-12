@@ -1,0 +1,1729 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+<!--
+++++++++++++++++++++++++++++++++
+    Site Powered by Limecube
+    https://www.limecube.co
+++++++++++++++++++++++++++++++++
+-->
+
+    <!--qms_push_show.head_tag_top-->
+
+
+<link rel="canonical" href="index.html" />
+
+    <meta name="robots" content="noindex,nofollow" />
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Your Wizard</title>
+<meta name="description" content="" />
+
+<meta name="HandheldFriendly" content="True" />
+<meta name="MobileOptimized" content="320" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=6.0">
+
+<script type="text/javascript">
+    /*! onloadCSS. (onload callback for loadCSS) [c]2017 Filament Group, Inc. MIT License */
+    /* global navigator */
+    /* exported onloadCSS */
+    function onloadCSS( ss, callback ) {
+        var called;
+        function newcb(){
+            if( !called && callback ){
+                called = true;
+                callback.call( ss );
+            }
+        }
+        if( ss.addEventListener ){
+            ss.addEventListener( "load", newcb );
+        }
+        if( ss.attachEvent ){
+            ss.attachEvent( "onload", newcb );
+        }
+
+        // This code is for browsers that don’t support onload
+        // No support for onload (it'll bind but never fire):
+        //	* Android 4.3 (Samsung Galaxy S4, Browserstack)
+        //	* Android 4.2 Browser (Samsung Galaxy SIII Mini GT-I8200L)
+        //	* Android 2.3 (Pantech Burst P9070)
+
+        // Weak inference targets Android < 4.4
+        if( "isApplicationInstalled" in navigator && "onloadcssdefined" in ss ) {
+            ss.onloadcssdefined( newcb );
+        }
+    }
+
+    /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+    /* This file is meant as a standalone workflow for
+    - testing support for link[rel=preload]
+    - enabling async CSS loading in browsers that do not support rel=preload
+    - applying rel preload css once loaded, whether supported or not.
+    */
+    (function( w ){
+        "use strict";
+        // rel=preload support test
+        if( !w.loadCSS ){
+            w.loadCSS = function(){};
+        }
+        // define on the loadCSS obj
+        var rp = loadCSS.relpreload = {};
+        // rel=preload feature support test
+        // runs once and returns a function for compat purposes
+        rp.support = (function(){
+            var ret;
+            try {
+                ret = w.document.createElement( "link" ).relList.supports( "preload" );
+            } catch (e) {
+                ret = false;
+            }
+            return function(){
+                return ret;
+            };
+        })();
+
+        // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+        // then change that media back to its intended value on load
+        rp.bindMediaToggle = function( link ){
+            // remember existing media attr for ultimate state, or default to 'all'
+            var finalMedia = link.media || "all";
+
+            function enableStylesheet(){
+                link.media = finalMedia;
+            }
+
+            // bind load handlers to enable media
+            if( link.addEventListener ){
+                link.addEventListener( "load", enableStylesheet );
+            } else if( link.attachEvent ){
+                link.attachEvent( "onload", enableStylesheet );
+            }
+
+            // Set rel and non-applicable media type to start an async request
+            // note: timeout allows this to happen async to let rendering continue in IE
+            setTimeout(function(){
+                link.rel = "stylesheet";
+                link.media = "only x";
+            });
+            // also enable media after 3 seconds,
+            // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+            setTimeout( enableStylesheet, 3000 );
+        };
+
+        // loop through link elements in DOM
+        rp.poly = function(){
+            // double check this to prevent external calls from running
+            if( rp.support() ){
+                return;
+            }
+            var links = w.document.getElementsByTagName( "link" );
+            for( var i = 0; i < links.length; i++ ){
+                var link = links[ i ];
+                // qualify links to those with rel=preload and as=style attrs
+                if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+                    // prevent rerunning on link
+                    link.setAttribute( "data-loadcss", true );
+                    // bind listeners to toggle media back
+                    rp.bindMediaToggle( link );
+                }
+            }
+        };
+
+        // if unsupported, run the polyfill
+        if( !rp.support() ){
+            // run once at least
+            rp.poly();
+
+            // rerun poly on an interval until onload
+            var run = w.setInterval( rp.poly, 500 );
+            if( w.addEventListener ){
+                w.addEventListener( "load", function(){
+                    rp.poly();
+                    w.clearInterval( run );
+                } );
+            } else if( w.attachEvent ){
+                w.attachEvent( "onload", function(){
+                    rp.poly();
+                    w.clearInterval( run );
+                } );
+            }
+        }
+
+
+        // commonjs
+        if( typeof exports !== "undefined" ){
+            exports.loadCSS = loadCSS;
+        }
+        else {
+            w.loadCSS = loadCSS;
+        }
+    }( typeof global !== "undefined" ? global : this ) );
+
+    /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+    (function(w){
+        "use strict";
+        /* exported loadCSS */
+        var loadCSS = function( href, before, media, attributes ){
+            // Arguments explained:
+            // `href` [REQUIRED] is the URL for your CSS file.
+            // `before` [OPTIONAL] is the element the script should use as a reference for injecting our stylesheet <link> before
+            // By default, loadCSS attempts to inject the link after the last stylesheet or script in the DOM. However, you might desire a more specific location in your document.
+            // `media` [OPTIONAL] is the media type or query of the stylesheet. By default it will be 'all'
+            // `attributes` [OPTIONAL] is the Object of attribute name/attribute value pairs to set on the stylesheet's DOM Element.
+            var doc = w.document;
+            var ss = doc.createElement( "link" );
+            var ref;
+            if( before ){
+                ref = before;
+            }
+            else {
+                var refs = ( doc.body || doc.getElementsByTagName( "head" )[ 0 ] ).childNodes;
+                ref = refs[ refs.length - 1];
+            }
+
+            var sheets = doc.styleSheets;
+            // Set any of the provided attributes to the stylesheet DOM Element.
+            if( attributes ){
+                for( var attributeName in attributes ){
+                    if( attributes.hasOwnProperty( attributeName ) ){
+                        ss.setAttribute( attributeName, attributes[attributeName] );
+                    }
+                }
+            }
+            ss.rel = "stylesheet";
+            ss.href = href;
+            // temporarily set media to something inapplicable to ensure it'll fetch without blocking render
+            ss.media = "only x";
+
+            // wait until body is defined before injecting link. This ensures a non-blocking load in IE11.
+            function ready( cb ){
+                if( doc.body ){
+                    return cb();
+                }
+                setTimeout(function(){
+                    ready( cb );
+                });
+            }
+            // Inject link
+            // Note: the ternary preserves the existing behavior of "before" argument, but we could choose to change the argument to "after" in a later release and standardize on ref.nextSibling for all refs
+            // Note: `insertBefore` is used instead of `appendChild`, for safety re: http://www.paulirish.com/2011/surefire-dom-element-insertion/
+            ready( function(){
+                ref.parentNode.insertBefore( ss, ( before ? ref : ref.nextSibling ) );
+            });
+            // A method (exposed on return object for external use) that mimics onload by polling document.styleSheets until it includes the new sheet.
+            var onloadcssdefined = function( cb ){
+                var resolvedHref = ss.href;
+                var i = sheets.length;
+                while( i-- ){
+                    if( sheets[ i ].href === resolvedHref ){
+                        return cb();
+                    }
+                }
+                setTimeout(function() {
+                    onloadcssdefined( cb );
+                });
+            };
+
+            function loadCB(){
+                if( ss.addEventListener ){
+                    ss.removeEventListener( "load", loadCB );
+                }
+                ss.media = media || "all";
+            }
+
+            // once loaded, set link's media back to `all` so that the stylesheet applies once it loads
+            if( ss.addEventListener ){
+                ss.addEventListener( "load", loadCB);
+            }
+            ss.onloadcssdefined = onloadcssdefined;
+            onloadcssdefined( loadCB );
+            return ss;
+        };
+        // commonjs
+        if( typeof exports !== "undefined" ){
+            exports.loadCSS = loadCSS;
+        }
+        else {
+            w.loadCSS = loadCSS;
+        }
+    }( typeof global !== "undefined" ? global : this ));
+
+    var limecube_ready = false;
+    var limecube_style_editor_css_ready = false;
+
+    function domReady() {
+        setTimeout(function () {
+            if (!limecube_ready) {
+                limecube_ready = true;
+
+                if (document.body) {
+                    document.body.className += " loaded";
+                } else {
+                    var bodyLoad = setInterval(function(){
+                        if (document.body) {
+                            document.body.className += " loaded";
+                            clearInterval(bodyLoad);
+                        }
+                    }, 500);
+                }
+
+                if (typeof $ !== 'undefined') {
+                    $("body").trigger("limecubeReady");
+                } else {
+                    window.addEventListener("load", function (event) {
+                        if (typeof $ !== 'undefined') $("body").trigger("limecubeReady");
+                    });
+                }
+            }
+        }, 500);
+    }
+
+    setTimeout(function () { domReady(); console.log('domReady by timeout'); }, 3000);
+
+    function styleEditorCssReady() {
+        limecube_style_editor_css_ready = true;
+    }
+</script>
+
+
+            <meta property="og:title" content="Your Wizard" />
+                <meta property="og:url" content="https://399f3ff3.limecube.co/index">
+                <meta property="og:type" content="website">
+    
+            
+                        <meta property="og:ttl" content="345600">
+                                        <meta property="og:description" content="Unleash Your Imagination with Your Wizard" />
+    
+            <meta name="twitter:card" content="summary" />
+        
+
+
+<link rel="stylesheet" href="https://399f3ff3.limecube.co/css/defaults.css?v=10.2.0.6" onload="domReady();">
+
+    <link rel="preload" as="style" href="https://399f3ff3.limecube.co/pe_page_sections_css/139871?v=1702323092" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/pe_page_sections_css/139871?v=1702323092"></noscript>
+
+    <link rel="stylesheet" href="https://399f3ff3.limecube.co/components/page_editor/css/sections/min/headers/v2-header-standard.css?v=10.2.0.6" id="lc_header_section_css">
+    <link rel="stylesheet" href="https://399f3ff3.limecube.co/components/page_editor/css/sections/min/footer/footer_standard.stylesheet.css?v=10.2.0.6" id="lc_footer_section_css">
+
+<style id="module_css_3a882378-87b1-42c4-91e7-10297123c40e">        #lc-rct-3a882378-87b1-42c4-91e7-10297123c40e a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-rct-3a882378-87b1-42c4-91e7-10297123c40e a.lc-button > span {
+            color: #ffffff;
+        }
+
+</style><style id="module_css_20155f32-f700-4382-bdd8-759b1eded049">@media (max-width: 767px) {
+    #qms-box-module-20155f32-f700-4382-bdd8-759b1eded049.qms-box-module-layout-text-over-image .qms-box-module-item,
+    #qms-box-module-20155f32-f700-4382-bdd8-759b1eded049 .qms-box-module-item-image img {
+        height: 350px !important;
+    }
+}
+
+
+    
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button::before,
+    #lc-box-btn-lc-06a81cb7-1257-4676-8b36-caab3d5a6b17 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+    
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button::before,
+    #lc-box-btn-lc-9c85aad2-feff-4aea-b8ce-e0d81a201631 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+    
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button::before,
+    #lc-box-btn-lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+    
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button::before,
+    #lc-box-btn-lc-c88cabb1-53d7-40d4-9748-b26389760b82 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+    
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button::before,
+    #lc-box-btn-lc-3f03bbe6-3407-4c05-b779-8113a87b5e08 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+    
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button {
+        border-color: #000000;
+            background-color: #000000;
+        color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button:hover {
+        border-color: #0d0d0d;
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button > span {
+            color: #ffffff;
+        }
+
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button:hover > span{
+        color: #ffffff;
+    }
+
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button::before,
+    #lc-box-btn-lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751 a.lc-button::after {
+            background-color: #0d0d0d;
+        border-color: #0d0d0d;
+        color: #ffffff;
+        }
+
+
+</style><style id="module_css_31de1e1b-9f3c-44df-ab6f-a408a3e76154">@media (max-width: 767px) {
+    #qms-box-module-31de1e1b-9f3c-44df-ab6f-a408a3e76154.qms-box-module-layout-text-over-image .qms-box-module-item,
+    #qms-box-module-31de1e1b-9f3c-44df-ab6f-a408a3e76154 .qms-box-module-item-image img {
+        height: 350px !important;
+    }
+}
+
+
+        #lc-box-btn-lc-f5459e1c-898b-4531-a28e-a33dc873aa90 a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-f5459e1c-898b-4531-a28e-a33dc873aa90 a.lc-button > span {
+            color: #ffffff;
+        }
+
+        #lc-box-btn-lc-a0deeb78-2984-4c39-90bc-e41d565872c5 a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-a0deeb78-2984-4c39-90bc-e41d565872c5 a.lc-button > span {
+            color: #ffffff;
+        }
+
+        #lc-box-btn-lc-fc2144f4-66b2-4773-8194-4e564c921035 a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-fc2144f4-66b2-4773-8194-4e564c921035 a.lc-button > span {
+            color: #ffffff;
+        }
+
+        #lc-box-btn-lc-9e736930-7fd7-482e-b78f-023aa134b39f a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-9e736930-7fd7-482e-b78f-023aa134b39f a.lc-button > span {
+            color: #ffffff;
+        }
+
+        #lc-box-btn-lc-48a479ce-5181-4f26-9771-c080316de4b3 a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-48a479ce-5181-4f26-9771-c080316de4b3 a.lc-button > span {
+            color: #ffffff;
+        }
+
+        #lc-box-btn-lc-d8192c0f-b022-4426-a97e-83c6f6119385 a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-box-btn-lc-d8192c0f-b022-4426-a97e-83c6f6119385 a.lc-button > span {
+            color: #ffffff;
+        }
+
+</style><style id="module_css_9e158e6f-2112-4f09-bd8b-d403732e52ee">        #lc-rct-9e158e6f-2112-4f09-bd8b-d403732e52ee a.lc-button {
+            background-color: #311fa6;
+        border-color: #311fa6;
+        color: #311fa6;
+        }
+    #lc-rct-9e158e6f-2112-4f09-bd8b-d403732e52ee a.lc-button > span {
+            color: #ffffff;
+        }
+
+</style><style id="module_css_32e79c65-536c-4976-819c-aa99016b117a">
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-vertical-alternate .qms-blog-summary-post-container .qms-blog-post:nth-child(even) .qms-blog-post-description {
+                    border-radius: 0px 0 0 0px;
+            }
+
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-vertical-alternate .qms-blog-summary-post-container .qms-blog-post:nth-child(odd) .qms-blog-post-description {
+                    border-radius: 0 0px 0px 0;
+            }
+
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-horizontal .qms-blog-summary-post-container .qms-blog-post .qms-blog-post-description {
+                    border-radius: 0 0 0px 0px;
+            }
+
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-post-container .qms-blog-post .qms-blog-post-picture img,
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-vertical .qms-blog-summary-post-container .qms-blog-post .qms-blog-post-description,
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-masonry .qms-blog-summary-post-container .qms-blog-post,
+    #blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a .qms-blog-summary-tiled .qms-blog-summary-post-container .qms-blog-post {
+                    border-radius: 0px;
+            }
+
+</style>
+
+
+        <link rel="preload" as="style" href="https://399f3ff3.limecube.co/css/checkbox-x.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/css/checkbox-x.min.css"></noscript>
+    
+        <link rel="preload" as="style" href="https://399f3ff3.limecube.co/js/bootstrapdatepicker/bootstrap-datetimepicker.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/js/bootstrapdatepicker/bootstrap-datetimepicker.min.css"></noscript>
+    
+        <link rel="preload" as="style" href="https://399f3ff3.limecube.co/css/fileinput.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/css/fileinput.min.css"></noscript>
+    
+            <link rel="stylesheet" type="text/css" href="https://399f3ff3.limecube.co/js/slick/slick.css?v=10.2.0.6"/>
+        
+
+<!-- loader for site-->
+<style>
+    :root {
+        --theme-color-1: #ffffff;
+        --theme-color-2: #f2b84b;
+        --theme-color-3: #311fa6;
+        --theme-color-4: #0d0d0d;
+        --theme-color-5: #ffffff;
+    }
+
+    #owlreporter-preloader { position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;background:#fff;-webkit-transition:all .3s ease-out;transition:all .3s ease-out;}.loaded #owlreporter-preloader { visibility:hidden;opacity:0;}.no-js #owlreporter-preloader { display:none}.no-js h1 { color:#222}#site-loading-gif{ position: absolute;top: 50%;left: 50%;margin: -125px 0px 0px -125px;}
+    .container_preloader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #ffffff;
+    }
+
+    .loader {
+        max-width: 80px;
+        width: 100%;
+        height: auto;
+        stroke-linecap: round;
+    }
+    circle {
+        fill: none;
+        stroke-width: 7;
+        animation-name: preloader;
+        animation-duration: 3s;
+        animation-iteration-count: infinite;
+        animation-timing-function: ease-in-out;
+        transform-origin: 170px 170px;
+        will-change: transform;
+    }
+    circle:nth-of-type(1) {
+        stroke-dasharray: 550px;
+        webkit-animation-delay: -0.15s;
+        animation-delay: -0.15s;
+    }
+
+    circle:nth-of-type(2) {
+        stroke-dasharray: 500px;
+        webkit-animation-delay: -0.3s;
+        animation-delay: -0.3s;
+    }
+
+    circle:nth-of-type(3) {
+        stroke-dasharray: 450px;
+        webkit-animation-delay: -0.4s;
+        animation-delay: -0.4s;
+    }
+
+    circle:nth-of-type(4) {
+        stroke-dasharray: 300px;
+        webkit-animation-delay: -0.5s;
+        animation-delay: -0.5s;
+    }
+
+    @keyframes preloader {
+        50% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
+
+
+
+
+
+
+
+
+<link rel="preload" href="https://399f3ff3.limecube.co/css/fonts/fontawesome-webfont.woff2?v=10.2.0.6" as="font" crossorigin>
+<link rel="preload" href="https://399f3ff3.limecube.co/css/fonts/bootstrap/glyphicons-halflings-regular.woff2" as="font" crossorigin>
+<!--qms_push_show.head_tag-->
+
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap"></noscript><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700,700i,900,900i&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700,700i,900,900i&display=swap"></noscript><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Heebo:300,500,900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Heebo:300,500,900&display=swap"></noscript>
+
+    <!-- Custom styles for this template -->
+    <link rel="preload" as="style" href="https://399f3ff3.limecube.co/components/page_editor/templates/themes/ai/css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/components/page_editor/templates/themes/ai/css/style.css"></noscript>
+    <link rel="preload" as="style" href="https://399f3ff3.limecube.co/components/page_editor/templates/themes/ai/css/style-user.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/components/page_editor/templates/themes/ai/css/style-user.css"></noscript>
+
+    
+
+
+
+
+<link rel="preload" as="style" href="https://399f3ff3.limecube.co/pe_style_editor_css/1702323629" as="style" onload="styleEditorCssReady();this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://399f3ff3.limecube.co/pe_style_editor_css/1702323629"></noscript>
+
+<style type="text/css">
+        </style>
+
+</head>
+
+<body class=" lc-client lc-page-background-size-full-width lc-page-background-repeat-no-repeat"  data-aos-section="fade" data-aos-direction-section="InUp" >
+
+<!--qms_push_show.body_tag_top-->
+
+
+
+    <div style='z-index:100000' id='owlreporter-preloader'>
+        <div class="container_preloader">
+            <svg class="loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 340">
+                <circle cx="170" cy="170" r="160" stroke="#9dd16d"/>
+                <circle cx="170" cy="170" r="135" stroke="#8faaee"/>
+                <circle cx="170" cy="170" r="110" stroke="#b98fee"/>
+                <circle cx="170" cy="170" r="85" stroke="#f28ec2"/>
+            </svg>
+        </div>
+    </div>
+
+
+    
+
+
+<header id="header">
+    
+<div class="lc-sections-container lc-sections-header">
+    
+                            
+        <div id="lc-78256394-a3a1-4035-abc8-6fd0e44c38e0" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-none lc-section-padding-bottom-none">
+        <nav class="navbar header-standard">
+  <div class="container-fluid">
+      <div class="navbar-header">
+          
+<a class="navbar-brand navb logo-text" href="index.html" itemprop="url">
+	<span class="logo">
+					<span itemprop="name">Your Wizard</span>
+			</span>
+	<span class="button-in-anchor-wrapper">
+		<span class="pe-module-menu pe-main-menu">
+			<span class="button-in-anchor edit-btn"></span>
+            <span style="display: none" class="button-in-anchor img-tui-editor" data-logo-image=""></span>
+		</span>
+	</span>
+</a>
+
+                                            <a href="https://399f3ff3.limecube.co/contact" onclick='ga_button_clicked(this, "mobileHeader", "click", "CTA", "")' class="lc-mobile-phone-icon pull-right visible-xs-inline-block">
+                <span class="lc-mobile-phone-icon-default" style="-webkit-mask-image: url('https://399f3ff3.limecube.co/css/bootstrap-icons/icons/envelope.svg'); mask-image: url('https://399f3ff3.limecube.co/css/bootstrap-icons/icons/envelope.svg')"></span>
+            </a>
+            
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar" aria-label="navigation bar toggle">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+          </button>
+      </div>
+      <div class="navbar-collapse collapse" id="navbar">
+          <ul id="navbar_menu_tree" class="nav navbar-nav  navbar-right">
+        <li class="lc-menu-type-root lc-nav-active">
+        <a href="index.html">Home</a>
+    </li>
+    <li class="lc-menu-type-page">
+                    <a href="https://399f3ff3.limecube.co/about">About</a>
+            </li>
+    <li class="lc-menu-type-page">
+                    <a href="https://399f3ff3.limecube.co/what-we-offer">What we offer</a>
+            </li>
+    <li class="lc-menu-type-page">
+                    <a href="https://399f3ff3.limecube.co/contact">Contact</a>
+            </li>
+    <li class="lc-menu-type-shop">
+                    <a href="https://399f3ff3.limecube.co/shop">Shop</a>
+            </li>
+
+</ul>
+
+
+                </div>
+                  <div class="navbar-text lc-header-custom-text"></div>
+                <div id="qms-btn-header-cta" class="lc-header-cta-button lc-button-module lc-button-alignment-center ms-3 me-2">
+    <a href="https://399f3ff3.limecube.co/contact"  class="lc-button lc-button-shape-square lc-button-style-solid lc-button-size-small ">
+                    <span>Get  in touch</span>
+            </a>
+</div>
+
+        </div>
+</nav>
+
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+        </div>
+
+    
+
+</header>
+
+<div id="content-wrapper">
+    
+<div class="lc-sections-container lc-sections-content">
+    
+                            
+        <div id="lc-65bf982b-06a4-4b38-a0d5-9c386f9b5816" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-large lc-section-padding-bottom-medium">
+        <!--Full width 2 columns 8-4-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 col-sm-12">
+                <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h2>Unleash Your Imagination with Your Wizard</h2></div></div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                
+            </div>
+        </div>
+    </div>
+</section>
+<!--Full width 2 columns 8-4-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-8d5a0525-8672-41b4-a4de-64944814a9ab" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-xlarge lc-section-padding-bottom-xlarge">
+        <!--Full width content-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="qms-client-template-area"><div class="qms-spacer-module lc-separator"    data-aos="fadeInUp"
+>
+                    
+    <hr class="lc-separator-empty lc-separator-align-center            lc-spacing-top-six            lc-spacing-bottom-six    " style="width: 100%;
+            border-top-width: 1px;
+            color: #311fa6; border-color: #311fa6;            "/>
+    <div class="clearfix"></div>
+</div>
+</div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/Full width content-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-b1aac57f-5261-4597-9a69-a59fae1781ae" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-large lc-section-padding-bottom-large">
+        <!--Full width 2 columns 9-3-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-9 col-sm-9">
+                <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h2>Welcome to Your Wizard</h2><p>At Your Wizard, we specialize in creating stunning and personalized Photoshop edits that bring your ideas to life. Whether you need a unique logo design, a professional headshot, or want to restore an old image, our team of talented wizards is here to make your vision a reality.</p></div><div id="lc-rct-3a882378-87b1-42c4-91e7-10297123c40e" class="lc-rct-wrapper lc-button-wrapper"></div></div>
+            </div>
+            <div class="col-lg-3 col-sm-3">
+                
+            </div>
+        </div>
+    </div>
+</section>
+<!--Full width 2 columns 9-3-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-021e876f-6732-4b65-9aaa-25b04dfe8040" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-large lc-section-padding-bottom-large">
+        <!--Full width content-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h2>What we offer</h2></div><div id="lc-rct-20155f32-f700-4382-bdd8-759b1eded049" class="lc-rct-wrapper lc-box-wrapper"></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/Full width content-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-403c9c91-7bd9-43d5-b3d1-3f25a4395bf9" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-large lc-section-padding-bottom-large">
+        <!--Full width content-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="qms-client-template-area"><div id="lc-rct-31de1e1b-9f3c-44df-ab6f-a408a3e76154" class="lc-rct-wrapper lc-box-wrapper"></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/Full width content-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-10f968b1-ac03-4292-ac44-d4042b583bf1" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-xlarge lc-section-padding-bottom-xlarge">
+        <!--Standard width 1 column-->
+<section class="content spacing-default">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 col-sm-12">
+                <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h2>Subscribe to Our Newsletter</h2>
+<p>Stay up-to-date with the latest news, exclusive offers, and exciting updates.</p></div><div class="qms-spacer-module lc-separator"    data-aos="fadeInUp"
+>
+                    
+    <hr class="lc-separator-empty lc-separator-align-center            lc-spacing-top-none            lc-spacing-bottom-one    " style="width: 100%;
+            border-top-width: 1px;
+            color: #311fa6; border-color: #311fa6;            "/>
+    <div class="clearfix"></div>
+</div>
+<div class="qms-form-module qms-simple-form-module" id="qms-simple-form-d831c10e-9af6-4808-bbd5-9483c963a598"    data-aos="fadeInUp"
+>
+                        
+    <form method="post" enctype="multipart/form-data"
+          action="index.html"
+          class="contactForm form-horizontal "
+          style="          "
+          role="form" data-toggle="validator"
+    >
+
+                <input type="hidden" name="action" value="save" />
+        <input type="hidden" name="action_form_id" value="d831c10e-9af6-4808-bbd5-9483c963a598" />
+                
+        
+        <div class="container-fluid">
+            
+                                                                                                                                                    <div class="row">
+                        <div class="col-sm-6">
+                <div class="form-group">
+                                            <div class="col-sm-12">
+                            
+                                                                                        <input name="data[f_0]" value="" placeholder="First Name" aria-label="First Name" title="First Name" class="form-control" id="_f_0"
+                                         />
+                            
+                                                    </div>
+                    </div>
+                </div>
+                                                                                                                                    <div class="col-sm-6">
+                <div class="form-group required">
+                                            <div class="col-sm-12">
+                            
+                                                                                        <input name="data[f_2]" value="" placeholder="Email *" aria-label="Email" title="Email" class="form-control" id="_f_2"
+                                         required />
+                            
+                                                    </div>
+                    </div>
+                </div>
+                            </div>
+
+                            <div class="row">
+                    
+                    <div class="col-sm-12">
+                        <div class="thepot">
+                            <input type="text" name="data[email_repeat]" aria-label="if You see this field do not change value inside it" value="honeypot@qmswebsitebuilder.com" title="if You see this field do not change value inside it" autocomplete="off" />
+                        </div>
+                                            </div>
+                </div>
+                        <div class="row">
+                <div class="col-sm-12">
+                                        <input type="button" id="qms-simple-form-button-d831c10e-9af6-4808-bbd5-9483c963a598" class="qms-button " aria-label="Submit" title="Submit" value="Submit"
+                           onclick="this.form.submit();"
+                    />
+                </div>
+            </div>
+        </div>
+            </form>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Standard width 1 column-->
+
+
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+    
+                            
+        <div id="lc-73bbd97f-237e-4675-bd4c-76aa73ff1bb7" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-large lc-section-padding-bottom-large">
+        <!--Full width 2 columns 3-9-->
+<section class="content spacing-lg">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-sm-3">
+                <div class="qms-client-template-area"><div class="qms-spacer-module lc-separator"    data-aos="fadeInUp"
+>
+                    
+    <hr class="lc-separator-empty lc-separator-align-center            lc-spacing-top-none            lc-spacing-bottom-none    " style="width: 100%;
+            border-top-width: 1px;
+            color: #311fa6; border-color: #311fa6;            "/>
+    <div class="clearfix"></div>
+</div>
+<div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h2>Latest News</h2></div><div id="lc-rct-9e158e6f-2112-4f09-bd8b-d403732e52ee" class="lc-rct-wrapper lc-button-wrapper"></div></div>
+            </div>
+            <div class="col-lg-9 col-sm-9">
+                <div class="qms-client-template-area"><div class="qms-blog-summary qms-blog-summary-module"    data-aos="fadeInUp"
+>
+    <div id="blog_summary_content_32e79c65-536c-4976-819c-aa99016b117a">
+        
+                
+<div class="qms-blog-summary-layout qms-blog-summary-horizontal qms-blog-summary-margin-none">
+        <div class="qms-blog-summary-post-container qms-blog-summary-cols-2" itemscope itemtype="http://schema.org/Blog">
+                                                                        
+            <div class="qms-blog-post" style=""  itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
+                <div itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+                    <meta itemprop="name" content="" />
+                                    </div>
+                                <div class="qms-blog-post-description">
+                    <div class="space-around hor-medium vert-medium">
+                        <h3 class="qms-blog-post-title" itemprop="headline"><a href="https://399f3ff3.limecube.co/the-impact-of-technology" itemprop="url">The Impact of Technology</a></h3>
+                        <p class="qms-blog-post-date">Posted on: <span itemprop="datePublished">07 December, 2023</span></p>                                                                            <div class="qms-blog-post-excerpt" itemprop="description">
+                                <p>In the ever-shifting terrain of marketing and web development, the impact of technology reverberates.....<br><a href="https://399f3ff3.limecube.co/the-impact-of-technology">Read more</a></p>
+                            </div>
+                                                                                            </div>
+                </div>
+            </div>
+                                                                
+            <div class="qms-blog-post" style=""  itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
+                <div itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+                    <meta itemprop="name" content="" />
+                                    </div>
+                                <div class="qms-blog-post-description">
+                    <div class="space-around hor-medium vert-medium">
+                        <h3 class="qms-blog-post-title" itemprop="headline"><a href="https://399f3ff3.limecube.co/the-future-of-the-industry" itemprop="url">The Future of the industry</a></h3>
+                        <p class="qms-blog-post-date">Posted on: <span itemprop="datePublished">07 December, 2023</span></p>                                                                            <div class="qms-blog-post-excerpt" itemprop="description">
+                                <p>As the digital landscape continues to evolve at an exhilarating pace, glimpsing into the future beco.....<br><a href="https://399f3ff3.limecube.co/the-future-of-the-industry">Read more</a></p>
+                            </div>
+                                                                                            </div>
+                </div>
+            </div>
+                                                                
+            <div class="qms-blog-post" style=""  itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
+                <div itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+                    <meta itemprop="name" content="" />
+                                    </div>
+                                <div class="qms-blog-post-description">
+                    <div class="space-around hor-medium vert-medium">
+                        <h3 class="qms-blog-post-title" itemprop="headline"><a href="https://399f3ff3.limecube.co/building-customer-relationships" itemprop="url">Building Customer Relationships</a></h3>
+                        <p class="qms-blog-post-date">Posted on: <span itemprop="datePublished">07 December, 2023</span></p>                                                                            <div class="qms-blog-post-excerpt" itemprop="description">
+                                <p>In the digital realm, where interactions are often virtual, the art of building genuine customer rel.....<br><a href="https://399f3ff3.limecube.co/building-customer-relationships">Read more</a></p>
+                            </div>
+                                                                                            </div>
+                </div>
+            </div>
+                                                                
+            <div class="qms-blog-post" style=""  itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
+                <div itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+                    <meta itemprop="name" content="" />
+                                    </div>
+                                <div class="qms-blog-post-description">
+                    <div class="space-around hor-medium vert-medium">
+                        <h3 class="qms-blog-post-title" itemprop="headline"><a href="https://399f3ff3.limecube.co/navigating-change-and-uncertainty" itemprop="url">Navigating Change and Uncertainty</a></h3>
+                        <p class="qms-blog-post-date">Posted on: <span itemprop="datePublished">07 December, 2023</span></p>                                                                            <div class="qms-blog-post-excerpt" itemprop="description">
+                                <p>Change is the heartbeat of the digital world, and uncertainty often lurks in its shadows. Operating .....<br><a href="https://399f3ff3.limecube.co/navigating-change-and-uncertainty">Read more</a></p>
+                            </div>
+                                                                                            </div>
+                </div>
+            </div>
+            </div>
+</div>
+
+    </div>
+    </div></div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Full width 2 columns 3-9-->
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+        </div>
+
+</div>
+
+<footer id="footer">
+    
+<div class="lc-sections-container lc-sections-footer">
+    
+                            
+        <div id="lc-b4e041ab-fe4b-4b77-b481-340749205f95" class="lc-section-wrapper">
+            <div class="lc-section-content lc-section-padding-top-medium lc-section-padding-bottom-medium">
+        <!--Standard width 3 column footer testmenow-->
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-sm-4">
+            <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h6>Quick Links</h6>
+<p><a class="link-page" id="textLink-lg0ahheehm9qfgsmt2n" href="https://399f3ff3.limecube.co/index" title="">Home</a></p>
+<p><a class="link-page" id="textLink-lg0ahr5x6k7fk6381fm" href="https://399f3ff3.limecube.co/about" title="">About Us</a></p>
+<p><a class="link-page" id="textLink-ljexifge2ouxes4mayq" href="https://399f3ff3.limecube.co/what-we-offer" target="" title="">What we offer</a></p>
+<p><a class="link-page" id="textLink-lg0ai9mka0yk6xvshzl" href="https://399f3ff3.limecube.co/contact" title="">Contact Us</a></p></div></div>
+        </div>
+        <div class="col-md-4 col-sm-4">
+            <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h6>Contact</h6>
+<p>Address: 456 Maple Avenue, Your City</p>
+<p>Phone: <a class="link-page" id="textLink-ljf6fwzcgx030qirflu" href="tel:1300123456" title="">1300 123 456</a></p>
+<p>© All rights reserved</p></div></div>
+        </div>
+        <div class="col-md-4 col-sm-4">
+            <div class="qms-client-template-area"><div class="qms-text-module qms-simple-text-module"    data-aos="fadeInUp"
+><h6>Subscribe</h6></div><div class="qms-form-module qms-simple-form-module" id="qms-simple-form-fe0a1f58-31ca-4a29-9c4f-39d09245982e"    data-aos="fadeInUp"
+>
+                        
+    <form method="post" enctype="multipart/form-data"
+          action="index.html"
+          class="contactForm form-horizontal "
+          style="          "
+          role="form" data-toggle="validator"
+    >
+
+                <input type="hidden" name="action" value="save" />
+        <input type="hidden" name="action_form_id" value="fe0a1f58-31ca-4a29-9c4f-39d09245982e" />
+                
+        
+        <div class="container-fluid">
+            
+                                                                                                                                                                                        <div class="row">
+                        <div class="col-sm-12">
+                <div class="form-group required">
+                                            <div class="col-sm-12">
+                            
+                                                                                        <input name="data[f_2]" value="" placeholder="Email *" aria-label="Email" title="Email" class="form-control" id="_f_2"
+                                         required />
+                            
+                                                    </div>
+                    </div>
+                </div>
+                            </div>
+
+                            <div class="row">
+                    
+                    <div class="col-sm-12">
+                        <div class="thepot">
+                            <input type="text" name="data[email_repeat]" aria-label="if You see this field do not change value inside it" value="honeypot@qmswebsitebuilder.com" title="if You see this field do not change value inside it" autocomplete="off" />
+                        </div>
+                                            </div>
+                </div>
+                        <div class="row">
+                <div class="col-sm-12">
+                                        <input type="button" id="qms-simple-form-button-fe0a1f58-31ca-4a29-9c4f-39d09245982e" class="qms-button " aria-label="Submit" title="Submit" value="Submit"
+                           onclick="this.form.submit();"
+                    />
+                </div>
+            </div>
+        </div>
+            </form>
+    </div>
+</div>
+        </div>
+    </div>
+    <div class="row footer-copyright-padding">
+        <div class="col-sm-12 margin-none-copyright-social">
+            <div class="row">
+              <div class="col-sm-6 col-md-4 lc-copyright-left"    data-aos="fadeInUp"
+>
+                                        <span>Powered by <a href="https://www.limecube.co/"  target="_blank" rel="noopener">Limecube</a></span>
+                                </div>
+              <div class="col-sm-6 col-md-4 col-md-offset-4 margin-none-copyright-social"    data-aos="fadeInUp"
+>
+                                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </div>
+        <div class="lc-section-overlay"></div>
+        </div>
+
+        </div>
+
+    
+
+
+</footer>
+
+
+
+
+
+    <a href="https://399f3ff3.limecube.co/shop-cart" id="lc_shop_cart_icon" style="display: none">
+        <span class="lc-shop-products-count">0</span>
+        <span></span>
+    </a>
+
+
+
+<script type="text/javascript" src="https://399f3ff3.limecube.co/js/dist/scripts.single.bundle.js?v=10.2.0.6"></script>
+
+<script type="text/javascript" src="https://399f3ff3.limecube.co/js/dist/react.single.bundle.js?t=10.2.0.6"></script>
+
+<script type="text/javascript">
+    var ajax_prefix = '/';
+    var theme_epoch = '2';
+    var domain_hash = '399f3ff3';
+    var full_url = 'https://399f3ff3.limecube.co';
+    var site_full_url = 'https://399f3ff3.limecube.co';
+
+    var bucket_mask = 'limecube-live-';
+            var full_url = 'https://399f3ff3.limecube.co';
+        var site_full_url = 'https://399f3ff3.limecube.co';
+        var FILE_STORAGE_THUMBS = {"root\/pexels-images\/1701946643.jpeg":{"name":"1701946643.jpeg","path":"root\/pexels-images\/1701946643.jpeg","thumbs":{"thumb\/pexels-images\/1701946643_w1920_h1080_frectangle.jpeg":"thumb\/pexels-images\/1701946643_w1920_h1080_frectangle.jpeg","thumb\/pexels-images\/1701946643_w1280_h720_frectangle.jpeg":"thumb\/pexels-images\/1701946643_w1280_h720_frectangle.jpeg","thumb\/pexels-images\/1701946643_w1280_fwidth.webp":"thumb\/pexels-images\/1701946643_w1280_fwidth.webp","thumb\/pexels-images\/1701946643_w1024_h576_frectangle.jpeg":"thumb\/pexels-images\/1701946643_w1024_h576_frectangle.jpeg","thumb\/pexels-images\/1701946643_w98_h98_fcover.jpeg":"thumb\/pexels-images\/1701946643_w98_h98_fcover.jpeg","thumb\/pexels-images\/1701946643_w80_h80_fcrop.jpeg":"thumb\/pexels-images\/1701946643_w80_h80_fcrop.jpeg"}},"components\/page_editor\/css\/images\/no-icon.png":[],"root\/pexels-images\/1701946649.jpeg":{"name":"1701946649.jpeg","path":"root\/pexels-images\/1701946649.jpeg","thumbs":{"thumb\/pexels-images\/1701946649_w1920_h1080_frectangle.jpeg":"thumb\/pexels-images\/1701946649_w1920_h1080_frectangle.jpeg","thumb\/pexels-images\/1701946649_w1280_h720_frectangle.jpeg":"thumb\/pexels-images\/1701946649_w1280_h720_frectangle.jpeg","thumb\/pexels-images\/1701946649_w1280_fwidth.webp":"thumb\/pexels-images\/1701946649_w1280_fwidth.webp","thumb\/pexels-images\/1701946649_w1024_h576_frectangle.jpeg":"thumb\/pexels-images\/1701946649_w1024_h576_frectangle.jpeg","thumb\/pexels-images\/1701946649_w98_h98_fcover.jpeg":"thumb\/pexels-images\/1701946649_w98_h98_fcover.jpeg","thumb\/pexels-images\/1701946649_w80_h80_fcrop.jpeg":"thumb\/pexels-images\/1701946649_w80_h80_fcrop.jpeg"}},"root\/pexels-images\/1701946647.jpeg":{"name":"1701946647.jpeg","path":"root\/pexels-images\/1701946647.jpeg","thumbs":{"thumb\/pexels-images\/1701946647_w1920_h1080_frectangle.jpeg":"thumb\/pexels-images\/1701946647_w1920_h1080_frectangle.jpeg","thumb\/pexels-images\/1701946647_w1280_h720_frectangle.jpeg":"thumb\/pexels-images\/1701946647_w1280_h720_frectangle.jpeg","thumb\/pexels-images\/1701946647_w1280_fwidth.webp":"thumb\/pexels-images\/1701946647_w1280_fwidth.webp","thumb\/pexels-images\/1701946647_w1024_h576_frectangle.jpeg":"thumb\/pexels-images\/1701946647_w1024_h576_frectangle.jpeg","thumb\/pexels-images\/1701946647_w98_h98_fcover.jpeg":"thumb\/pexels-images\/1701946647_w98_h98_fcover.jpeg","thumb\/pexels-images\/1701946647_w80_h80_fcrop.jpeg":"thumb\/pexels-images\/1701946647_w80_h80_fcrop.jpeg"}},"components\/page_editor\/css\/images\/no-image.png":[]};
+        var module_content_space_sizes_values = {"none":"none","small":"one","medium":"two","large":"four","xlarge":"six"};
+    var site_pages_urls = {"139887":{"title":"Shop","seo_url":"shop"},"139888":{"title":"Shop - Cart","seo_url":"shop-cart"},"139889":{"title":"Shop - Checkout success","seo_url":"shop-checkout-success"},"139871":{"title":"Home","seo_url":"index"},"139872":{"title":"What we offer","seo_url":"what-we-offer"},"139877":{"title":"Portfolio","seo_url":"portfolio"},"139890":{"title":"Your Wizard Custom Logo Design \u2013 Bring Your Brand to Life","seo_url":"your-wizard-custom-logo-design--bring-your-brand-to-life"},"139891":{"title":"Professional Headshot Edit by Your Wizard \u2013 Present Yourself in the Best Light","seo_url":"professional-headshot-edit-by-your-wizard--present-yourself-in-the-best-light"},"139892":{"title":"Old Image Restoration Service by Your Wizard \u2013 Breathe New Life into Old Memories","seo_url":"old-image-restoration-service-by-your-wizard--breathe-new-life-into-old-memories"},"139873":{"title":"About","seo_url":"about"},"139874":{"title":"Contact","seo_url":"contact"},"139875":{"title":"Thank You","seo_url":"thank-you"},"139878":{"title":"10 Essential Tips for Beginners","seo_url":"10-essential-tips-for-beginners"},"139879":{"title":"How to Overcome Challenges","seo_url":"how-to-overcome-challenges"},"139880":{"title":"Navigating Change and Uncertainty","seo_url":"navigating-change-and-uncertainty"},"139881":{"title":"Building Customer Relationships","seo_url":"building-customer-relationships"},"139882":{"title":"The Future of the industry","seo_url":"the-future-of-the-industry"},"139883":{"title":"The Impact of Technology","seo_url":"the-impact-of-technology"},"139884":{"title":"Coming Soon","seo_url":"coming-soon"}};
+    var current_page_id = '139871';
+
+    var QMS_SITE_OPTIONS_CURRENT_COLOR_PALETTE = {"palette_preset_id":"74","color_1":{"background_color":"#ffffff","heading_color":"#0d0d0d","font_color":"#0d0d0d","links_color":"#311fa6"},"color_2":{"background_color":"#f2b84b","heading_color":"#0d0d0d","font_color":"#0d0d0d","links_color":"#311fa6"},"color_3":{"background_color":"#311fa6","heading_color":"#ffffff","font_color":"#ffffff","links_color":"#f2b84b"},"color_4":{"background_color":"#0d0d0d","heading_color":"#ffffff","font_color":"#ffffff","links_color":"#f2b84b"},"color_5":{"background_color":"#ffffff","heading_color":"#0d0d0d","font_color":"#0d0d0d","links_color":"#311fa6"}};
+
+    function is_animated(entry) {
+        return $(entry).hasClass('animated') && !$(entry).hasClass('animating');
+    }
+
+    function activate_animation(entry) {
+        var animation = $(entry).data('aos'),
+            anim_duration = 1000;
+
+        if ($(entry).hasClass('fast')) anim_duration = 800;
+        if ($(entry).hasClass('faster')) anim_duration = 500;
+        if ($(entry).hasClass('slow')) anim_duration = 2000;
+        if ($(entry).hasClass('slower')) anim_duration = 3000;
+
+        if (animation) {
+            $(entry).addClass(['animated', 'animating', animation].join(' '));
+            setTimeout(function() {
+                $(entry).removeClass('animating');
+                $(entry).trigger('lc-aos-completed');
+            }, anim_duration);
+        }
+    }
+
+    function deactivate_animation(entry) {
+        var animation = $(entry).data('aos');
+
+        if (animation) {
+            $(entry).removeClass(['animated', animation].join(' '));
+        }
+    }
+
+    function do_limecube_search(module_guid, results_page_url) {
+        var search_query = $("input[name=q]", "#qms-search-" + module_guid).val();
+        document.location.href = ajax_prefix + results_page_url + '/' + search_query;
+    }
+
+            $(document).ready(function() {
+            lc_shop_cart_status();
+        });
+    </script>
+
+    
+            
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+    
+
+
+
+
+
+
+            
+    
+            
+    
+    
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+    
+    
+    <script type="text/javascript">
+        $(function() {
+            var lc_sections_js_interval = setInterval(function () {
+                if (limecube_ready && limecube_style_editor_css_ready) {
+                    clearInterval(lc_sections_js_interval);
+
+                    var first_section = $('.lc-sections-content > .lc-section-wrapper').first(),
+                        body = $('body'),
+                        notification_bar = $('.notification-bar');
+
+                    if (first_section.hasClass('lc-section-height100')) {
+                        function update_section_height() {
+                            var lc_body_padding_top;
+
+                            if (body.hasClass('fixed-header')) {
+                                lc_body_padding_top = body.css("padding-top");
+                            } else {
+                                let is_header_on_top = ($('#header .header-side').length === 0);
+                                lc_body_padding_top = is_header_on_top ? $('#header').outerHeight() : 0;
+                                if (notification_bar.length) {
+                                    lc_body_padding_top += notification_bar.outerHeight()
+                                }
+                                lc_body_padding_top += 'px';
+                            }
+
+                            first_section.css("min-height", "calc(100vh - " + lc_body_padding_top + ")");
+                        }
+
+                        update_section_height();
+
+                        $(window).on('resize', update_section_height);
+                        body.on('notification-bar-recalculated', update_section_height);
+                    }
+                }
+            }, 300);
+        });
+    </script>
+
+
+        <script src="https://399f3ff3.limecube.co/js/checkbox-x.js"></script>
+    
+        <script src="https://399f3ff3.limecube.co/js/radiobutton-x.js"></script>
+    
+        <script type="text/javascript" src="https://399f3ff3.limecube.co/js/bootstrapdatepicker/bootstrap-datetimepicker.min.js"></script>
+    
+        <script type="text/javascript" src="https://399f3ff3.limecube.co/js/jquery/validator.js"></script>
+    
+        <script src="https://399f3ff3.limecube.co/js/uploader-x.min.js"></script>
+    
+            <script type="text/javascript" src="https://399f3ff3.limecube.co/js/slick/slick.min.js?v=10.2.0.6"></script>
+        
+        <script type="text/javascript" src="https://399f3ff3.limecube.co/js/isotope/imagesloaded.pkgd.min.js"></script>
+    
+        
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
+    
+
+<script type="text/javascript">
+    var dom_ready = false,
+        AOSObserver = null;
+
+    $(document).ready(function () {
+        $('.navbar a.dropdown-toggle').on('click', function (e) {
+            var $el = $(this);
+
+            if ($el.parent("li").hasClass('open')) {
+                document.location.href = $el.attr('href');
+            } else {
+                $('.nav li.open').not($el.parents("li")).removeClass("open");
+                $el.parent("li").addClass('open');
+            }
+
+            if ($(window).width() > 1024) {
+                document.location.href = $el.attr('href');
+            }
+            return false;
+        });
+
+        $('.navbar li.dropdown').on('mouseenter', function (e) {
+            if ($(window).width() > 1024) {
+                $(this).children(".dropdown-menu").stop(true, true).fadeIn();
+            }
+        }).on('mouseleave', function (e) {
+            if ($(window).width() > 1024) {
+                $(this).children(".dropdown-menu").stop(true, true).fadeOut();
+            }
+        });
+	dom_ready = true;
+    });
+
+    function not_in_header_and_unset_aos(value, el) {
+        if($(el).closest('#header').length == 0){
+            return true;
+        }
+        el.removeAttribute('data-aos');
+        return false;
+    }
+
+    function not_rct_module(value, el) {
+        return ($(el).closest('.lc-rct-wrapper').length === 0);
+    }
+
+    function observer_initialize() {
+        var entries = $('[data-aos]').filter(not_in_header_and_unset_aos).filter(not_rct_module);
+        if ("IntersectionObserver" in window) {
+            AOSObserver = new IntersectionObserver(
+                    function (entries, observer) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting && !is_animated(entry.target)) {
+                                activate_animation(entry.target);
+                            }
+                        });
+                    },
+                    {
+                        rootMargin: '0% 50%',
+                        threshold: 0
+                    }
+            );
+
+            entries.each(function () {
+                AOSObserver.observe($(this).get(0));
+            });
+        } else {
+            // Possibly fall back to a more compatible method here
+            let scrollAnimThrottleTimeout;
+
+            function scroll_animation() {
+                if (scrollAnimThrottleTimeout) {
+                    clearTimeout(scrollAnimThrottleTimeout);
+                }
+
+                scrollAnimThrottleTimeout = setTimeout(function () {
+                    let scrollAnimNodes = document.querySelectorAll("[data-aos]");
+                    let scrollTop = window.pageYOffset;
+
+                    for (let i in scrollAnimNodes) {
+                        if (!scrollAnimNodes.hasOwnProperty(i)) continue;
+                        let node = scrollAnimNodes[i];
+                        if ($(node).offset().top < (window.innerHeight + scrollTop)) {
+                            if (!is_animated(node)) {
+                                activate_animation(node);
+                            }
+                        }
+                    }
+
+                }, 20);
+            }
+
+            document.addEventListener("scroll", scroll_animation);
+            window.addEventListener("resize", scroll_animation);
+            window.addEventListener("orientationChange", scroll_animation);
+
+            scroll_animation();
+        }
+    }
+
+    function scroll_animation_initialize() {
+        if (dom_ready) {
+            observer_initialize();
+        } else {
+            $(document).ready(function () {
+                observer_initialize();
+            });
+        }
+    }
+
+    if (limecube_ready) {
+        scroll_animation_initialize()
+    } else {
+        $(document).on("limecubeReady", function () {
+            scroll_animation_initialize()
+        });
+    }
+
+    
+    
+    var limecube_notification_bar = false;
+
+	$(document).ready(function () {
+        var context = $('#qms-simple-form-fe0a1f58-31ca-4a29-9c4f-39d09245982e');
+        if ($(".form_date", context).datetimepicker != undefined) {
+            $(".form_date", context).datetimepicker( {
+                minView: 2,
+                format: 'dd MM, yyyy',
+                autoclose: true,
+                todayBtn: true,
+                pickerPosition: "bottom-left"
+            });
+        }
+        if ($(".form_datetime", context).datetimepicker != undefined) {
+            $(".form_datetime", context).datetimepicker( {
+                format: 'dd MM, yyyy hh:ii',
+                autoclose: true,
+                todayBtn: true,
+                pickerPosition: "bottom-left"
+            });
+        }
+        if ($(".custom-radiobuttons-x", context).radiobuttonX != undefined) {
+            $(".custom-radiobuttons-x", context).radiobuttonX();
+        }
+        if ($(".custom-checkboxes-x", context).checkboxX != undefined) {
+            $(".custom-checkboxes-x", context).checkboxX( { threeState: false});
+        }
+        if ($(".custom-input-x", context).fileinput != undefined) {
+            $(".custom-input-x", context).each(function (i, o) {
+                $(o).fileinput( {
+                    initialCaption: o.hasAttribute('placeholder') ? o.getAttribute('placeholder') : '',
+                    showRemove: false, showUpload: false, showPreview: false,
+                    browseLabel: 'Browse', browseIcon: '', browseClass: 'btn btn-basic-gray form-control'
+                });
+            });
+        }
+        $('.contactForm', context).validator();
+    });
+
+        function ga_button_new_clicked(button, et_category, et_action, et_label, et_value) {
+            if (window.gtag) {
+                gtag('event', et_action, {
+                    'event_category': et_category,
+                    'event_label': et_label,
+                    'event_value': et_value
+                });
+            } else if (typeof(ga) !== "undefined") {
+                ga('send', 'event', et_category, et_action, et_label, et_value);
+            }
+        }
+    
+    $(document).ready(function () {
+        window.modules_store.dispatch({
+            'type': 'ADD_MODULE',
+            'module_uid': 'button_new_module',
+            'module_id': '3a882378-87b1-42c4-91e7-10297123c40e',
+            'module_config': {"text":"Find out more","cms_url":"","external_url":"","size":"lc-button-size-medium","padding_top":"small","padding_bottom":"none","alignment":"left","event_tracking":"0","et_category":"","et_action":"","et_label":"","et_value":"","background_color":"3","background_color_type":"color_number","text_color":"#ffffff","layout":"lc-button-shape-square lc-button-style-solid","hover_animation":""},
+            'module_data': {"text":"Find out more","cms_url":"","external_url":"","size":"lc-button-size-medium","padding_top":"small","padding_bottom":"none","alignment":"left","event_tracking":"0","et_category":"","et_action":"","et_label":"","et_value":"","background_color":"3","background_color_type":"color_number","text_color":"#ffffff","layout":"lc-button-shape-square lc-button-style-solid","hover_animation":""}
+        });
+
+
+        let lc_rct_init_interval = setInterval(function () {
+            if (limecube_ready && limecube_style_editor_css_ready) {
+                clearInterval(lc_rct_init_interval);
+                let module_content = $("#lc-rct-3a882378-87b1-42c4-91e7-10297123c40e"),
+                    animation_el = module_content.closest("[data-aos-section]"),
+                    animation = animation_el.data('aos-section'),
+                    animation_direction = animation_el.data('aos-direction-section');
+
+                if (module_content.children().length > 0) {
+                    hydrateRoot(module_content.get(0), React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactButtonModule, { 'module_id': "3a882378-87b1-42c4-91e7-10297123c40e", 'animation': animation, 'animation_direction': animation_direction }, null)
+                    ));
+                } else {
+                    createRoot(module_content.get(0)).render(React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactButtonModule, { 'module_id': "3a882378-87b1-42c4-91e7-10297123c40e", 'animation': animation, 'animation_direction': animation_direction }, null)
+                    ));
+                }
+
+                            }
+        }, 300);
+    });
+
+    $(document).ready(function () {
+        window.modules_store.dispatch({
+            'type': 'ADD_MODULE',
+            'module_uid': 'box_module',
+            'module_id': '20155f32-f700-4382-bdd8-759b1eded049',
+            'module_config': {"boxes_per_row":"3","image_height":"450","mobile_image_height":"350","box_item_width_type":"auto","box_item_width":"400","box_opacity":"op04","layout":"text-over-image","items":[{"item_guid":"lc-06a81cb7-1257-4676-8b36-caab3d5a6b17","picture":"root\/pexels-images\/1701946643.jpeg","title":"Custom Logo Design","alt":"","description":"<p>Stand out from the crowd with a one-of-a-kind logo designed specifically for your brand.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9c85aad2-feff-4aea-b8ce-e0d81a201631","picture":"root\/pexels-images\/1701946649.jpeg","title":"Photoshop Editing","alt":"","description":"<p>We offer top-tier Adobe Photoshop services, including object and person removal, face swapping, adding individuals to images, and catering to any custom requests.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83","picture":"root\/pexels-images\/1701946647.jpeg","title":"Professional Headshots","alt":"","description":"<p>Make a lasting impression with polished and professional headshots that capture your unique personality and style.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-c88cabb1-53d7-40d4-9748-b26389760b82","picture":"root\/pexels-images\/1701946647.jpeg","title":"Professional Headshots","alt":"","description":"<p>Make a lasting impression with polished and professional headshots that capture your unique personality and style.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-3f03bbe6-3407-4c05-b779-8113a87b5e08","picture":"root\/pexels-images\/1701946649.jpeg","title":"Image Restoration","alt":"","description":"<p>Bring old and damaged photos back to life with our expert image restoration services.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751","picture":"root\/pexels-images\/1701946643.jpeg","title":"Custom Logo Design","alt":"","description":"<p>Stand out from the crowd with a one-of-a-kind logo designed specifically for your brand.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"}],"options":{"space_around_text_vertical":"large","space_around_text_horizontal":"large","text_vertical_alignment":"top"},"carousel_mode":"0","carousel_slides_wide":"4","carousel_slides_medium":"3","carousel_slides_mobile":"1","button_layout":"lc-button-shape-square lc-button-style-solid","button_size":"lc-button-size-medium","button_padding_top":"small","box_items_alignment":"center","box_margin":"small","icon_spacing_bottom":"none","image_text_proportion":"2","box_image_position":"left","hover_animation":"qms-box-module-hover--roxy","button_hover_animation":"button--calypso"},
+            'module_data': {"items":[{"item_guid":"lc-06a81cb7-1257-4676-8b36-caab3d5a6b17","picture":"root\/pexels-images\/1701946643.jpeg","title":"Custom Logo Design","alt":"","description":"<p>Stand out from the crowd with a one-of-a-kind logo designed specifically for your brand.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9c85aad2-feff-4aea-b8ce-e0d81a201631","picture":"root\/pexels-images\/1701946649.jpeg","title":"Photoshop Editing","alt":"","description":"<p>We offer top-tier Adobe Photoshop services, including object and person removal, face swapping, adding individuals to images, and catering to any custom requests.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-94f7c0f3-203a-46c0-bad9-37dc3b05fb83","picture":"root\/pexels-images\/1701946647.jpeg","title":"Professional Headshots","alt":"","description":"<p>Make a lasting impression with polished and professional headshots that capture your unique personality and style.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-c88cabb1-53d7-40d4-9748-b26389760b82","picture":"root\/pexels-images\/1701946647.jpeg","title":"Professional Headshots","alt":"","description":"<p>Make a lasting impression with polished and professional headshots that capture your unique personality and style.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-3f03bbe6-3407-4c05-b779-8113a87b5e08","picture":"root\/pexels-images\/1701946649.jpeg","title":"Image Restoration","alt":"","description":"<p>Bring old and damaged photos back to life with our expert image restoration services.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9f89c0e4-c5ef-4dd4-86f2-ec16b12be751","picture":"root\/pexels-images\/1701946643.jpeg","title":"Custom Logo Design","alt":"","description":"<p>Stand out from the crowd with a one-of-a-kind logo designed specifically for your brand.<\/p>","anchor":"Explore","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"custom","button_color":"#000000","button_text_color":"#ffffff","hide_image":"0","image_placeholder_disabled":"0","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"}]}
+        });
+
+        let lc_banner_interval = setInterval(function () {
+            if (limecube_ready && limecube_style_editor_css_ready) {
+                clearInterval(lc_banner_interval);
+                let module_content = $("#lc-rct-20155f32-f700-4382-bdd8-759b1eded049"),
+                    animation_el = module_content.closest("[data-aos-section]"),
+                    animation = animation_el.data('aos-section'),
+                    animation_direction = animation_el.data('aos-direction-section');
+
+                if (module_content.children().length > 0) {
+                    hydrateRoot(module_content.get(0), React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactBoxModule, { 'module_id': "20155f32-f700-4382-bdd8-759b1eded049", 'animation': animation, 'animation_direction': animation_direction, 'admin_template_parser': false }, null)
+                    ));
+                } else {
+                    createRoot(module_content.get(0)).render(React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactBoxModule, { 'module_id': "20155f32-f700-4382-bdd8-759b1eded049", 'animation': animation, 'animation_direction': animation_direction, 'admin_template_parser': false }, null)
+                    ));
+                }
+            }
+        }, 300);
+    });
+
+    $(document).ready(function () {
+        window.modules_store.dispatch({
+            'type': 'ADD_MODULE',
+            'module_uid': 'box_module',
+            'module_id': '31de1e1b-9f3c-44df-ab6f-a408a3e76154',
+            'module_config': {"boxes_per_row":"3","image_height":"350","mobile_image_height":"350","box_item_width_type":"auto","box_item_width":"400","box_opacity":"op04","layout":"text-under-image","items":[{"item_guid":"lc-f5459e1c-898b-4531-a28e-a33dc873aa90","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I've been their customer for years, and I can honestly say their service is exceptional. Got some of my phone selfie pictures transformed into LinkedIn profile pictures for just $15! They always go above and beyond, and their attention to detail is impressive.\"<\/p>\n<p>- Harper ( CA)<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-a0deeb78-2984-4c39-90bc-e41d565872c5","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I couldn't be happier with the results I got from this company. Their team is incredibly talented and knowledgeable. They delivered and exceeded my expectations of getting my grandma old image restored :)\"<\/p>\n<p>- Olivia ( Kennebec ave Pocasset , MA )<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-fc2144f4-66b2-4773-8194-4e564c921035","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I've tried several companies in the past, but none of them compared to the level of professionalism. They truly understand customers and tailor their solutions.<\/p>\n<p>- Ava<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9e736930-7fd7-482e-b78f-023aa134b39f","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I Wanted something for my cat i was not so sure,&nbsp; but,&nbsp; the result i got ......A pretty pretty custom art of my own cat wow . From start to finish, this company was a pleasure to work with. Their customer support team was responsive and helpful throughout the entire process.\"<\/p>\n<p>- Margo<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-48a479ce-5181-4f26-9771-c080316de4b3","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I was impressed with the quality and efficiency of this company's work. They have a dedicated team that knows how to get things done right.\"<\/p>\n<p>- Franny<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-d8192c0f-b022-4426-a97e-83c6f6119385","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"Choosing this company was the best decision I made for my business. They have a great track record, and after working with them, I understand why.\"<\/p>\n<p>- Bernie<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"}],"options":{"space_around_text_vertical":"none","space_around_text_horizontal":"large","text_vertical_alignment":"middle"},"carousel_mode":"1","carousel_slides_wide":"3","carousel_slides_medium":"2","carousel_slides_mobile":"1","button_layout":"lc-button-shape-square lc-button-style-solid","button_size":"lc-button-size-medium","button_padding_top":"small","box_items_alignment":"center","box_margin":"medium","icon_spacing_bottom":"none","image_text_proportion":"2","box_image_position":"left","hover_animation":"","button_hover_animation":""},
+            'module_data': {"items":[{"item_guid":"lc-f5459e1c-898b-4531-a28e-a33dc873aa90","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I've been their customer for years, and I can honestly say their service is exceptional. Got some of my phone selfie pictures transformed into LinkedIn profile pictures for just $15! They always go above and beyond, and their attention to detail is impressive.\"<\/p>\n<p>- Harper ( CA)<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-a0deeb78-2984-4c39-90bc-e41d565872c5","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I couldn't be happier with the results I got from this company. Their team is incredibly talented and knowledgeable. They delivered and exceeded my expectations of getting my grandma old image restored :)\"<\/p>\n<p>- Olivia ( Kennebec ave Pocasset , MA )<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-fc2144f4-66b2-4773-8194-4e564c921035","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I've tried several companies in the past, but none of them compared to the level of professionalism. They truly understand customers and tailor their solutions.<\/p>\n<p>- Ava<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-9e736930-7fd7-482e-b78f-023aa134b39f","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I Wanted something for my cat i was not so sure,&nbsp; but,&nbsp; the result i got ......A pretty pretty custom art of my own cat wow . From start to finish, this company was a pleasure to work with. Their customer support team was responsive and helpful throughout the entire process.\"<\/p>\n<p>- Margo<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-48a479ce-5181-4f26-9771-c080316de4b3","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"I was impressed with the quality and efficiency of this company's work. They have a dedicated team that knows how to get things done right.\"<\/p>\n<p>- Franny<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"},{"item_guid":"lc-d8192c0f-b022-4426-a97e-83c6f6119385","picture":"components\/page_editor\/css\/images\/no-image.png","title":"","alt":"","description":"<p class=\"lc-text-font-size-medium\">\"Choosing this company was the best decision I made for my business. They have a great track record, and after working with them, I understand why.\"<\/p>\n<p>- Bernie<\/p>","anchor":"","cms_url":"","external_url":"","options":{"space_around_text_horizontal":"none","space_around_text_vertical":"none"},"icon_color_type":"color_number","icon_color":"3","icon_type":"default","icon_picture":"components\/page_editor\/css\/images\/no-icon.png","button_color_type":"color_number","button_color":"3","button_text_color":"5","hide_image":"1","image_placeholder_disabled":"1","text_alignment":"left","background_color":"","background_color_type":"no-color","text_color":"","icon":"","icon_size":"50"}]}
+        });
+
+        let lc_banner_interval = setInterval(function () {
+            if (limecube_ready && limecube_style_editor_css_ready) {
+                clearInterval(lc_banner_interval);
+                let module_content = $("#lc-rct-31de1e1b-9f3c-44df-ab6f-a408a3e76154"),
+                    animation_el = module_content.closest("[data-aos-section]"),
+                    animation = animation_el.data('aos-section'),
+                    animation_direction = animation_el.data('aos-direction-section');
+
+                if (module_content.children().length > 0) {
+                    hydrateRoot(module_content.get(0), React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactBoxModule, { 'module_id': "31de1e1b-9f3c-44df-ab6f-a408a3e76154", 'animation': animation, 'animation_direction': animation_direction, 'admin_template_parser': false }, null)
+                    ));
+                } else {
+                    createRoot(module_content.get(0)).render(React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactBoxModule, { 'module_id': "31de1e1b-9f3c-44df-ab6f-a408a3e76154", 'animation': animation, 'animation_direction': animation_direction, 'admin_template_parser': false }, null)
+                    ));
+                }
+            }
+        }, 300);
+    });
+
+        $("#qms-box-module-31de1e1b-9f3c-44df-ab6f-a408a3e76154").slick({
+            dots: false,
+            infinite: true,
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            responsive: [
+                {
+                    breakpoint: 1367,
+                    settings: {
+                        slidesToShow: 2
+                    }
+                },
+                {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: 1
+                    }
+                }
+            ]
+        });
+    
+	$(document).ready(function () {
+        var context = $('#qms-simple-form-d831c10e-9af6-4808-bbd5-9483c963a598');
+        if ($(".form_date", context).datetimepicker != undefined) {
+            $(".form_date", context).datetimepicker( {
+                minView: 2,
+                format: 'dd MM, yyyy',
+                autoclose: true,
+                todayBtn: true,
+                pickerPosition: "bottom-left"
+            });
+        }
+        if ($(".form_datetime", context).datetimepicker != undefined) {
+            $(".form_datetime", context).datetimepicker( {
+                format: 'dd MM, yyyy hh:ii',
+                autoclose: true,
+                todayBtn: true,
+                pickerPosition: "bottom-left"
+            });
+        }
+        if ($(".custom-radiobuttons-x", context).radiobuttonX != undefined) {
+            $(".custom-radiobuttons-x", context).radiobuttonX();
+        }
+        if ($(".custom-checkboxes-x", context).checkboxX != undefined) {
+            $(".custom-checkboxes-x", context).checkboxX( { threeState: false});
+        }
+        if ($(".custom-input-x", context).fileinput != undefined) {
+            $(".custom-input-x", context).each(function (i, o) {
+                $(o).fileinput( {
+                    initialCaption: o.hasAttribute('placeholder') ? o.getAttribute('placeholder') : '',
+                    showRemove: false, showUpload: false, showPreview: false,
+                    browseLabel: 'Browse', browseIcon: '', browseClass: 'btn btn-basic-gray form-control'
+                });
+            });
+        }
+        $('.contactForm', context).validator();
+    });
+
+    $(document).ready(function () {
+        window.modules_store.dispatch({
+            'type': 'ADD_MODULE',
+            'module_uid': 'button_new_module',
+            'module_id': '9e158e6f-2112-4f09-bd8b-d403732e52ee',
+            'module_config': {"text":"See all posts","cms_url":"","external_url":"","size":"lc-button-size-medium","padding_top":"small","padding_bottom":"none","alignment":"left","event_tracking":"0","et_category":"","et_action":"","et_label":"","et_value":"","background_color":"3","background_color_type":"color_number","text_color":"#ffffff","layout":"lc-button-shape-square lc-button-style-solid","hover_animation":""},
+            'module_data': {"text":"See all posts","cms_url":"","external_url":"","size":"lc-button-size-medium","padding_top":"small","padding_bottom":"none","alignment":"left","event_tracking":"0","et_category":"","et_action":"","et_label":"","et_value":"","background_color":"3","background_color_type":"color_number","text_color":"#ffffff","layout":"lc-button-shape-square lc-button-style-solid","hover_animation":""}
+        });
+
+
+        let lc_rct_init_interval = setInterval(function () {
+            if (limecube_ready && limecube_style_editor_css_ready) {
+                clearInterval(lc_rct_init_interval);
+                let module_content = $("#lc-rct-9e158e6f-2112-4f09-bd8b-d403732e52ee"),
+                    animation_el = module_content.closest("[data-aos-section]"),
+                    animation = animation_el.data('aos-section'),
+                    animation_direction = animation_el.data('aos-direction-section');
+
+                if (module_content.children().length > 0) {
+                    hydrateRoot(module_content.get(0), React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactButtonModule, { 'module_id': "9e158e6f-2112-4f09-bd8b-d403732e52ee", 'animation': animation, 'animation_direction': animation_direction }, null)
+                    ));
+                } else {
+                    createRoot(module_content.get(0)).render(React.createElement(Provider, { 'store': window.modules_store },
+                        React.createElement(ReactButtonModule, { 'module_id': "9e158e6f-2112-4f09-bd8b-d403732e52ee", 'animation': animation, 'animation_direction': animation_direction }, null)
+                    ));
+                }
+
+                            }
+        }, 300);
+    });
+
+</script>
+
+
+</body>
+</html>
